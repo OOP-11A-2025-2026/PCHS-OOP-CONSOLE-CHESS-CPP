@@ -1,7 +1,7 @@
 # PCHS-OOP-CONSOLE-CHESS-CPP
 
 ---
-**File structure**
+# File structure
 
 ```
 console-chess-cpp/
@@ -82,3 +82,8 @@ console-chess-cpp/
 │
 └── build/
 ```
+
+---
+## State diagram
+
+![Diagram](images/console-chess-state-diagram.drawio.png)

@@ -1,0 +1,68 @@
+# ========================
+# OS Files
+# ========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ========================
+# Build Artifacts
+# ========================
+build/
+*.o
+*.obj
+*.so
+*.dll
+*.exe
+*.out
+*.app
+*.dylib
+*.a
+*.lib
+
+# ========================
+# CMake / Make
+# ========================
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+CTestTestfile.cmake
+
+# ========================
+# IDE / Editor Specific
+# ========================
+# VS Code
+.vscode/
+
+# CLion
+.idea/
+*.iml
+cmake-build-*/
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# ========================
+# Logs / Temp Files
+# ========================
+*.log
+*.tmp
+*.swp
+*.swo
+
+# ========================
+# Misc
+# ========================
+*.pyc
+*.pyo
+*.class
