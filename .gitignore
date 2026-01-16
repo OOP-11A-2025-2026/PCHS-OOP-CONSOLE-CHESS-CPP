@@ -66,3 +66,4 @@ cmake-build-*/
 *.pyc
 *.pyo
 *.class
+*.cache
