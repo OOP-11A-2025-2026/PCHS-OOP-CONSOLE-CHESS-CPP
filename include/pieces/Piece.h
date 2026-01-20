@@ -1,5 +1,4 @@
-#ifndef PIECE_H
-#define PIECE_H
+#pragma once
 
 #include <vector>
 #include "board/Move.h"
@@ -78,5 +77,3 @@ public:
      */
     virtual Piece* clone() const = 0;
 };
-
-#endif // PIECE_H
