@@ -11,4 +11,4 @@ public:
     Piece* clone() const override;
 };
 
-#endif // BISHOP_H
+#endif
