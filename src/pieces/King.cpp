@@ -7,6 +7,7 @@ King::King(Color color, int file, int rank)
 std::vector<Move> King::getLegalMoves(const Board& board) const {
     std::vector<Move> moves;
 
+    // Normal king moves
     for (int df = -1; df <= 1; df++) {
         for (int dr = -1; dr <= 1; dr++) {
             if (df == 0 && dr == 0) continue;
@@ -26,6 +27,26 @@ std::vector<Move> King::getLegalMoves(const Board& board) const {
             }
         }
     }
+
+    // Castling
+    if (color == Color::WHITE && file == 4 && rank == 0) {
+        if (board.canCastleKingSide(Color::WHITE)) {
+            moves.emplace_back(Square(4,0), Square(6,0));
+        }
+        if (board.canCastleQueenSide(Color::WHITE)) {
+            moves.emplace_back(Square(4,0), Square(2,0));
+        }
+    }
+
+    if (color == Color::BLACK && file == 4 && rank == 7) {
+        if (board.canCastleKingSide(Color::BLACK)) {
+            moves.emplace_back(Square(4,7), Square(6,7));
+        }
+        if (board.canCastleQueenSide(Color::BLACK)) {
+            moves.emplace_back(Square(4,7), Square(2,7));
+        }
+    }
+
     return moves;
 }
 
