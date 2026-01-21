@@ -163,4 +163,4 @@ console-chess-cpp/
 - Dilyana Vasileva
 - Darian Ganev
 - Yordan Tsonev
--Venelin Jelev
+- Venelin Jelev
