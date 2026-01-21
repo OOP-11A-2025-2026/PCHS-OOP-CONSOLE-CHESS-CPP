@@ -1,12 +1,12 @@
 #include "board/Board.h"
 #include "board/Square.h"
 #include "board/Move.h"
+
 #include "pieces/King.h"
 #include "pieces/Rook.h"
 #include "pieces/Queen.h"
 #include "pieces/Bishop.h"
 #include "pieces/Knight.h"
-
 #include <algorithm>
 #include <cmath>
 
@@ -41,6 +41,7 @@ Board::Board(const Board& other) {
     }
 }
 
+
 Board::~Board() {
     for (int f = 0; f < 8; f++) {
         for (int r = 0; r < 8; r++) {
@@ -54,6 +55,7 @@ bool Board::isInside(int file, int rank) const {
     return file >= 0 && file < 8 &&
            rank >= 0 && rank < 8;
 }
+
 
 Piece* Board::getPieceAt(int file, int rank) const {
     if (!isInside(file, rank)) return nullptr;
@@ -103,15 +105,16 @@ void Board::makeMove(const Move& move) {
         std::abs(to.getFile() - from.getFile()) == 2) {
 
         bool kingSide = to.getFile() > from.getFile();
+
         squares[from.getFile()][from.getRank()] = nullptr;
         piece->setPosition(to.getFile(), to.getRank());
         squares[to.getFile()][to.getRank()] = piece;
 
-        if (piece->getColor() == Color::WHITE) {
+        if (piece->getColor() == Color::WHITE)
             whiteKingMoved = true;
-        } else {
+        else
             blackKingMoved = true;
-        }
+
         return;
     }
 
@@ -121,6 +124,7 @@ void Board::makeMove(const Move& move) {
     if (piece->getType() == PieceType::PAWN && move.isPromotion()) {
 
         Color color = piece->getColor();
+
         auto& vec = (color == Color::WHITE) ? whitePieces : blackPieces;
         vec.erase(std::remove(vec.begin(), vec.end(), piece), vec.end());
         delete piece;
