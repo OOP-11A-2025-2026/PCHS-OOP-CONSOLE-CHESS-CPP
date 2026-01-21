@@ -27,29 +27,29 @@ Game::Game()
 void Game::initializeBoard() {
     // Set up pawns
     for (int file = 0; file < 8; file++) {
-        board.setPieceAt(Square(file, 1), new Pawn(Color::WHITE, file, 1));
-        board.setPieceAt(Square(file, 6), new Pawn(Color::BLACK, file, 6));
+        board.placePiece(new Pawn(Color::WHITE, file, 1));
+        board.placePiece(new Pawn(Color::BLACK, file, 6));
     }
 
     // Set up white pieces
-    board.setPieceAt(Square(0, 0), new Rook(Color::WHITE, 0, 0));
-    board.setPieceAt(Square(7, 0), new Rook(Color::WHITE, 7, 0));
-    board.setPieceAt(Square(1, 0), new Knight(Color::WHITE, 1, 0));
-    board.setPieceAt(Square(6, 0), new Knight(Color::WHITE, 6, 0));
-    board.setPieceAt(Square(2, 0), new Bishop(Color::WHITE, 2, 0));
-    board.setPieceAt(Square(5, 0), new Bishop(Color::WHITE, 5, 0));
-    board.setPieceAt(Square(3, 0), new Queen(Color::WHITE, 3, 0));
-    board.setPieceAt(Square(4, 0), new King(Color::WHITE, 4, 0));
+    board.placePiece(new Rook(Color::WHITE, 0, 0));
+    board.placePiece(new Rook(Color::WHITE, 7, 0));
+    board.placePiece(new Knight(Color::WHITE, 1, 0));
+    board.placePiece(new Knight(Color::WHITE, 6, 0));
+    board.placePiece(new Bishop(Color::WHITE, 2, 0));
+    board.placePiece(new Bishop(Color::WHITE, 5, 0));
+    board.placePiece(new Queen(Color::WHITE, 3, 0));
+    board.placePiece(new King(Color::WHITE, 4, 0));
 
     // Set up black pieces
-    board.setPieceAt(Square(0, 7), new Rook(Color::BLACK, 0, 7));
-    board.setPieceAt(Square(7, 7), new Rook(Color::BLACK, 7, 7));
-    board.setPieceAt(Square(1, 7), new Knight(Color::BLACK, 1, 7));
-    board.setPieceAt(Square(6, 7), new Knight(Color::BLACK, 6, 7));
-    board.setPieceAt(Square(2, 7), new Bishop(Color::BLACK, 2, 7));
-    board.setPieceAt(Square(5, 7), new Bishop(Color::BLACK, 5, 7));
-    board.setPieceAt(Square(3, 7), new Queen(Color::BLACK, 3, 7));
-    board.setPieceAt(Square(4, 7), new King(Color::BLACK, 4, 7));
+    board.placePiece(new Rook(Color::BLACK, 0, 7));
+    board.placePiece(new Rook(Color::BLACK, 7, 7));
+    board.placePiece(new Knight(Color::BLACK, 1, 7));
+    board.placePiece(new Knight(Color::BLACK, 6, 7));
+    board.placePiece(new Bishop(Color::BLACK, 2, 7));
+    board.placePiece(new Bishop(Color::BLACK, 5, 7));
+    board.placePiece(new Queen(Color::BLACK, 3, 7));
+    board.placePiece(new King(Color::BLACK, 4, 7));
 }
 
 /**
@@ -195,6 +195,12 @@ bool Game::makeMove(const Move& move) {
 
     // Update game state
     updateGameState();
+
+    if (state == GameState::CHECK) {
+        moveHistory.back() += "+";
+    } else if (state == GameState::CHECKMATE) {
+        moveHistory.back() += "#";
+    }
 
     return true;
 }

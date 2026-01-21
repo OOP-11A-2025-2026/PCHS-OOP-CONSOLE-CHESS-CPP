@@ -40,6 +40,7 @@ private:
 public:
     Board();
     Board(const Board& other);
+    Board& operator=(const Board& other);
     ~Board();
 
     bool isInside(int file, int rank) const;

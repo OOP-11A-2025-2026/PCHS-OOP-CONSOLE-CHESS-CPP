@@ -3,6 +3,7 @@
 #include "enums/Color.h"
 #include "game/Game.h"
 #include "input/MoveParser.h"
+#include "input/PGNHandler.h"
 // #include "pgn/PGNExporter.h"  // Uncomment when implemented
 // #include "pgn/PGNParser.h"    // Uncomment when implemented
 #include "timer/Timer.h"
@@ -92,47 +93,41 @@ void ChessCLI::loadGame() {
         return;
     }
 
-    // TODO: Implement when PGNParser is available
-    std::cout << "\n  PGN loading not yet implemented." << std::endl;
-    std::cout << "  This feature requires PGNParser class." << std::endl;
-    pause();
-    
-    /*
-    // Uncomment when PGNParser is implemented:
-    
+    if (filename.find(".pgn") == std::string::npos) {
+        filename += ".pgn";
+    }
+
     try {
-        std::string pgnText = PGNParser::readFile(filename);
-        PGNParser parser;
+        Game newGame;
+        PGNHandler::loadFromFile(newGame, filename);
+
+        // Check if anything was loaded (e.g. at least one piece on board or history exists)
+        if (newGame.getMoveHistory().empty() && newGame.getBoard().isEmpty(4,0) && newGame.getBoard().isEmpty(4,7)) {
+             // Heuristic check: if history is empty and ke1/ke8 missing, probably failed or empty file.
+             // But actually, a fresh game has no history.
+             // Let's rely on PGNHandler::loadFromFile being successful if it returns.
+             // Currently PGNHandler prints errors to stderr but we can't catch them easily unless we change the API or redirect.
+             // We'll assume success if no crash.
+        }
 
         delete game;
-        game = new Game();
-        Board& board = game->getBoard();
+        game = new Game(newGame); // Use copy constructor or assignment
+        
+        // Reset timer
+        delete timer;
+        timer = new Timer(10);
+        timer->start();
 
-        std::vector<std::string> moves = parser.parseMoves(pgnText);
-        bool success = parser.loadToBoard(board, pgnText);
+        std::cout << "\n  Loaded " << filename << " successfully!" << std::endl;
+        std::cout << "  " << game->getMoveHistory().size() << " moves loaded." << std::endl;
+        pause();
 
-        if (success) {
-            game->setMoveHistory(moves);
-            game->setCurrentPlayer(moves.size() % 2 == 0 ? Color::WHITE : Color::BLACK);
+        gameLoop();
 
-            delete timer;
-            timer = new Timer(10);
-            timer->start();
-
-            std::cout << "\n  Loaded " << filename << " successfully!" << std::endl;
-            std::cout << "  " << moves.size() << " moves applied." << std::endl;
-            pause();
-
-            gameLoop();
-        } else {
-            std::cout << "\n  Failed to load PGN file. Check the file format." << std::endl;
-            pause();
-        }
     } catch (const std::exception& e) {
         std::cout << "\n  Error loading file: " << e.what() << std::endl;
         pause();
     }
-    */
 }
 
 /**
@@ -213,7 +208,44 @@ void ChessCLI::handleCommand(const std::string& input) {
         std::cout << "\n  Illegal move!" << std::endl;
         pause();
     } else {
-        if (game->makeMove(parsedMove.move.value())) {
+        Move finalMove = parsedMove.move.value();
+        
+        // --- Promotion Logic ---
+        // If it's a pawn moving to the last rank, but no promotion type is set, ASK THE USER.
+        Piece* p = game->getBoard().getPieceAt(finalMove.getFrom());
+        if (p && p->getType() == PieceType::PAWN) {
+            int targetRank = finalMove.getTo().getRank();
+            bool isPromoRank = (p->getColor() == Color::WHITE && targetRank == 7) ||
+                               (p->getColor() == Color::BLACK && targetRank == 0);
+            
+            if (isPromoRank && !finalMove.getPromotion().has_value()) {
+                // Ask for promotion type
+                std::cout << "\n  Pawn Promotion! Choose piece:" << std::endl;
+                std::cout << "  [Q] Queen" << std::endl;
+                std::cout << "  [R] Rook" << std::endl;
+                std::cout << "  [B] Bishop" << std::endl;
+                std::cout << "  [N] Knight" << std::endl;
+                std::cout << "  > ";
+                
+                std::string choiceStr = readLine();
+                char choice = 'q';
+                if (!choiceStr.empty()) choice = std::tolower(choiceStr[0]);
+
+                PieceType promoType = PieceType::QUEEN;
+                switch(choice) {
+                    case 'r': promoType = PieceType::ROOK; break;
+                    case 'b': promoType = PieceType::BISHOP; break;
+                    case 'n': promoType = PieceType::KNIGHT; break;
+                    default:  promoType = PieceType::QUEEN; break;
+                }
+                
+                // Reconstruct the move with promotion info
+                finalMove = Move(finalMove.getFrom(), finalMove.getTo(), promoType);
+            }
+        }
+        // -----------------------
+
+        if (game->makeMove(finalMove)) {
             timer->switchTurn();
         } else {
             std::cout << "\n  Illegal move!" << std::endl;

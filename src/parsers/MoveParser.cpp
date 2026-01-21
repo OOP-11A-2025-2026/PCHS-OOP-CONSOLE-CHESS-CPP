@@ -5,12 +5,34 @@
 ParsedMove MoveParser::parse(const std::string& input, const Board& board, Color turn) {
     if (input.empty()) return ParsedMove(std::nullopt, false, false, false, false);
 
-    if (input.find('x') != std::string::npos || input.find('O') != std::string::npos ||
-        std::isupper(input[0]) || std::isdigit(input[0])) {
-        return parseAlgebraic(input, board, turn);
+    // Remove whitespace from input for easier parsing
+    std::string cleanInput;
+    for (char c : input) {
+        if (!std::isspace(c)) {
+            cleanInput.push_back(c);
+        }
     }
 
-    return parseSimple(input, board, turn);
+    // If input is exactly 4 or 5 characters and looks like coordinate notation (e.g. e2e4 or e7e8q)
+    // and starts with file-rank-file-rank, treat as Simple.
+    // Otherwise treat as Algebraic.
+    // ...
+    
+    bool looksLikeCoordinate = false;
+    if (cleanInput.length() == 4 || cleanInput.length() == 5) {
+        if (cleanInput[0] >= 'a' && cleanInput[0] <= 'h' &&
+            cleanInput[1] >= '1' && cleanInput[1] <= '8' &&
+            cleanInput[2] >= 'a' && cleanInput[2] <= 'h' &&
+            cleanInput[3] >= '1' && cleanInput[3] <= '8') {
+            looksLikeCoordinate = true;
+        }
+    }
+
+    if (looksLikeCoordinate) {
+         return parseSimple(cleanInput, board, turn);
+    }
+    
+    return parseAlgebraic(cleanInput, board, turn);
 }
 
 ParsedMove MoveParser::parseSimple(const std::string& input, const Board& board, Color turn) {
@@ -90,19 +112,28 @@ std::optional<Move> MoveParser::resolveAlgebraic(
     std::string disamb;
     std::string targetStr;
 
-    for (; idx < (int)token.size(); idx++) {
-        char c = token[idx];
-        if (c == 'x') continue;
-        if (c >= 'a' && c <= 'h') {
-            if (idx + 1 < (int)token.size() && std::isdigit(token[idx + 1])) {
-                targetStr = token.substr(idx, 2);
-                break;
-            } else {
-                disamb.push_back(c);
+    // A better approach: 
+    // The target square is ALWAYS the last 2 characters of the token (e.g. "e4", "f6", "h8").
+    // Anything before that (after the piece letter) is disambiguation.
+    // CAUTION: This assumes the token is stripped of 'x', '+', '#', '='.
+    // "exf6" -> token is "ef6". Target "f6". Disamb "e".
+    // "Nbd7" -> token "Nbd7". Piece 'N'. Disamb "b". Target "d7".
+    // "R1e2" -> token "R1e2". Piece 'R'. Disamb "1". Target "e2".
+    
+    if (token.size() >= 2 + idx) {
+        // Check if the last two chars form a square
+        if (std::isdigit(token.back()) && 
+            token[token.size()-2] >= 'a' && token[token.size()-2] <= 'h') {
+            
+            targetStr = token.substr(token.size()-2);
+            if (token.size() > 2 + idx) {
+                // There is disambiguation info in between
+                disamb = token.substr(idx, token.size() - 2 - idx);
             }
-        } else if (std::isdigit(c)) {
-            disamb.push_back(c);
         }
+    } else {
+        // Fallback or error
+        return std::nullopt;
     }
 
     if (targetStr.empty()) return std::nullopt;
@@ -117,10 +148,18 @@ std::optional<Move> MoveParser::resolveAlgebraic(
     for (Piece* p : candidates) {
         Square from(p->getFile(), p->getRank());
         Move m(from, target, promotion);
-        if (!board.isLegalMove(m, turn)) continue;
+        
+        bool isLegal = board.isLegalMove(m, turn);
+        if (!isLegal) {
+             // std::cout << "DEBUG: Candidate " << (char)('a'+from.getFile()) << from.getRank()+1 
+             //           << " -> " << (char)('a'+target.getFile()) << target.getRank()+1 
+             //           << " is NOT legal." << std::endl;
+             continue;
+        }
 
         if (!disamb.empty()) {
             bool match = false;
+            // ...
             if (disamb.size() == 1) {
                 if (disamb[0] >= 'a' && disamb[0] <= 'h') match = (from.getFile() == disamb[0] - 'a');
                 if (disamb[0] >= '1' && disamb[0] <= '8') match = (from.getRank() == disamb[0] - '1');

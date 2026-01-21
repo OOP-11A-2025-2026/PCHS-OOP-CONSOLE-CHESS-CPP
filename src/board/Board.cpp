@@ -58,6 +58,55 @@ Board::Board(const Board& other)
     }
 }
 
+Board& Board::operator=(const Board& other) {
+    if (this == &other) return *this;
+
+    // 1. Cleanup existing resources
+    for (int f = 0; f < 8; f++)
+        for (int r = 0; r < 8; r++)
+            delete squares[f][r];
+    delete lastMove;
+    whitePieces.clear();
+    blackPieces.clear();
+
+    // 2. Copy state
+    enPassantTarget = other.enPassantTarget;
+    enPassantAvailable = other.enPassantAvailable;
+    whiteKingMoved = other.whiteKingMoved;
+    blackKingMoved = other.blackKingMoved;
+    whiteRookA_Moved = other.whiteRookA_Moved;
+    whiteRookH_Moved = other.whiteRookH_Moved;
+    blackRookA_Moved = other.blackRookA_Moved;
+    blackRookH_Moved = other.blackRookH_Moved;
+
+    // 3. Deep copy pieces
+    for (int f = 0; f < 8; f++) {
+        for (int r = 0; r < 8; r++) {
+            if (other.squares[f][r]) {
+                squares[f][r] = other.squares[f][r]->clone();
+                if (squares[f][r]->getColor() == Color::WHITE)
+                    whitePieces.push_back(squares[f][r]);
+                else
+                    blackPieces.push_back(squares[f][r]);
+            } else {
+                squares[f][r] = nullptr;
+            }
+        }
+    }
+    
+    // 4. Copy lastMove
+    if (other.lastMove) {
+        lastMove = new Move(
+            Square(other.lastMove->getFrom().getFile(), other.lastMove->getFrom().getRank()),
+            Square(other.lastMove->getTo().getFile(), other.lastMove->getTo().getRank())
+        );
+    } else {
+        lastMove = nullptr;
+    }
+
+    return *this;
+}
+
 Board::~Board() {
     for (int f = 0; f < 8; f++)
         for (int r = 0; r < 8; r++)
@@ -112,7 +161,7 @@ bool Board::isPathClear(const Square& from, const Square& to) const {
     int curR = from.getRank() + stepR;
 
     while (curF != to.getFile() || curR != to.getRank()) {
-        Piece* p = squares[curR][curF];
+        Piece* p = squares[curF][curR];
         if (p != nullptr) return false;
         curF += stepF;
         curR += stepR;
@@ -301,7 +350,7 @@ bool Board::isSquareAttacked(const Square& target, Color byColor) const {
     for (int pf : pFiles) {
         int pr = ty - pawnDir;
         if (pf >= 0 && pf < 8 && pr >= 0 && pr < 8) {
-            Piece* p = squares[pr][pf];
+            Piece* p = squares[pf][pr];
             if (p != nullptr && p->getColor() == byColor && p->getType() == PieceType::PAWN) 
                 return true;
         }
@@ -313,7 +362,7 @@ bool Board::isSquareAttacked(const Square& target, Color byColor) const {
         int fx = tx + o[0];
         int ry = ty + o[1];
         if (fx >= 0 && fx < 8 && ry >= 0 && ry < 8) {
-            Piece* p = squares[ry][fx];
+            Piece* p = squares[fx][ry];
             if (p != nullptr && p->getColor() == byColor && p->getType() == PieceType::KNIGHT) 
                 return true;
         }
@@ -326,7 +375,7 @@ bool Board::isSquareAttacked(const Square& target, Color byColor) const {
             int fx = tx + df;
             int ry = ty + dr;
             if (fx >= 0 && fx < 8 && ry >= 0 && ry < 8) {
-                Piece* p = squares[ry][fx];
+                Piece* p = squares[fx][ry];
                 if (p != nullptr && p->getColor() == byColor && p->getType() == PieceType::KING) 
                     return true;
             }
@@ -341,7 +390,7 @@ bool Board::isSquareAttacked(const Square& target, Color byColor) const {
         int fx = tx + df;
         int ry = ty + dr;
         while (fx >= 0 && fx < 8 && ry >= 0 && ry < 8) {
-            Piece* p = squares[ry][fx];
+            Piece* p = squares[fx][ry];
             if (p != nullptr) {
                 if (p->getColor() == byColor) {
                     PieceType t = p->getType();
@@ -365,11 +414,9 @@ bool Board::isSquareAttacked(const Square& target, Color byColor) const {
 bool Board::simulateMoveAndDetectSelfCheck(const Move& move, Color movingColor) const {
     Board copy = this->clone();
 
-    Square from = move.getFrom();
-    Square to = move.getTo();
-    Move copyMove(Square(from.getFile(), from.getRank()), Square(to.getFile(), to.getRank()));
-
-    copy.applyMove(copyMove);
+    // Use the move directly. The Square objects are value types (coordinates).
+    // Using the original move preserves promotion details.
+    copy.applyMove(move);
 
     Square kingSquare(0, 0);
     bool kingFound = false;
