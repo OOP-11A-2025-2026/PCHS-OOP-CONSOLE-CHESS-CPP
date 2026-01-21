@@ -86,10 +86,53 @@ void Board::removePieceAt(int file, int rank) {
 
 void Board::makeMove(const Move& move) {
     Square from = move.getFrom();
-    Square to = move.getTo();
+    Square to   = move.getTo();
 
     Piece* piece = getPieceAt(from.getFile(), from.getRank());
     if (!piece) return;
+
+    
+    if (piece->getType() == PieceType::KING &&
+        std::abs(to.getFile() - from.getFile()) == 2) {
+
+        bool kingSide = to.getFile() > from.getFile();
+        squares[from.getFile()][from.getRank()] = nullptr;
+        piece->setPosition(to.getFile(), to.getRank());
+        squares[to.getFile()][to.getRank()] = piece;
+
+        if (piece->getColor() == Color::WHITE) {
+            if (kingSide) {
+                Piece* rook = getPieceAt(7, 0);
+                squares[7][0] = nullptr;
+                rook->setPosition(5, 0);
+                squares[5][0] = rook;
+                whiteRookH_Moved = true;
+            } else {
+                Piece* rook = getPieceAt(0, 0);
+                squares[0][0] = nullptr;
+                rook->setPosition(3, 0);
+                squares[3][0] = rook;
+                whiteRookA_Moved = true;
+            }
+            whiteKingMoved = true;
+        } else {
+            if (kingSide) {
+                Piece* rook = getPieceAt(7, 7);
+                squares[7][7] = nullptr;
+                rook->setPosition(5, 7);
+                squares[5][7] = rook;
+                blackRookH_Moved = true;
+            } else {
+                Piece* rook = getPieceAt(0, 7);
+                squares[0][7] = nullptr;
+                rook->setPosition(3, 7);
+                squares[3][7] = rook;
+                blackRookA_Moved = true;
+            }
+            blackKingMoved = true;
+        }
+        return;
+    }
 
     if (piece->getType() == PieceType::KING) {
         if (piece->getColor() == Color::WHITE) whiteKingMoved = true;
@@ -108,10 +151,10 @@ void Board::makeMove(const Move& move) {
 
     removePieceAt(to.getFile(), to.getRank());
     squares[from.getFile()][from.getRank()] = nullptr;
-
     piece->setPosition(to.getFile(), to.getRank());
     squares[to.getFile()][to.getRank()] = piece;
 }
+
 
 void Board::undoMove(const Move& move, Piece* captured, Square from, Square to) {
     Piece* piece = getPieceAt(to.getFile(), to.getRank());
