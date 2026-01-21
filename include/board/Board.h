@@ -12,7 +12,8 @@ private:
     Piece* squares[8][8];
     std::vector<Piece*> whitePieces;
     std::vector<Piece*> blackPieces;
-
+    Square enPassantTarget;
+    bool enPassantAvailable;
     bool whiteKingMoved = false;
     bool blackKingMoved = false;
     bool whiteRookA_Moved = false;
@@ -44,6 +45,8 @@ public:
 
     bool canCastleKingSide(Color turn) const;
     bool canCastleQueenSide(Color turn) const;
+    bool isEnPassantAvailable() const;
+    Square getEnPassantTarget() const;
 
     Move getCastlingMove(Color turn, bool kingSide) const;
     void performCastling(Color turn, bool kingSide);
