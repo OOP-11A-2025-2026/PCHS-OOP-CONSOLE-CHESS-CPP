@@ -75,11 +75,11 @@ Piece* Board::getPieceAt(int file, int rank) const {
 }
 
 Piece* Board::getPieceAt(const Square& square) const {
-    return squares[square.getRank()][square.getFile()];
+    return squares[square.getFile()][square.getRank()];
 }
 
 void Board::setPieceAt(const Square& square, Piece* piece) {
-    squares[square.getRank()][square.getFile()] = piece;
+    squares[square.getFile()][square.getRank()] = piece;
 }
 
 bool Board::isInBounds(const Square& square) const {
@@ -490,7 +490,7 @@ void Board::makeMove(const Move& move) {
 }
 
 void Board::undoMove(const Move& move, Piece* captured, Square from, Square to) {
-    // празно още (няма да го правим)
+    // Leave empty for now
 }
 
 bool Board::isSquareAttacked(int file, int rank, Color byColor) const {
